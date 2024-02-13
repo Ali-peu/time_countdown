@@ -1,13 +1,13 @@
 part of 'timer_bloc.dart';
 
-enum TimerStatus { initial, play, pause, stop }
+enum TimerStatus { initial, play, pause, stop,wasChange }
 
 class TimerState extends Equatable {
   const TimerState(
-      {this.timerStatus = TimerStatus.initial, this.timer = const Duration()});
+      {this.timerStatus = TimerStatus.initial});
   final TimerStatus timerStatus;
-  final Duration timer;
+ 
 
   @override
-  List<Object> get props => [timerStatus, timer];
+  List<Object> get props => [timerStatus];
 }

@@ -8,20 +8,25 @@ sealed class TimerEvent extends Equatable {
 }
 
 class TimerStart extends TimerEvent {
-  final Duration duration;
-  const TimerStart({required this.duration});
+  final DateTime startDateTime;
+  const TimerStart({required this.startDateTime});
 }
 
-class TimerGetNewTimes extends TimerEvent {}
+class TimerGetNewTimes extends TimerEvent {
+  final DateTime newDatetime;
+
+  const TimerGetNewTimes({required this.newDatetime});
+
+}
 
 class TimerStop extends TimerEvent {}
 
-class TimerPause extends TimerEvent {
-  final Duration duration;
-  const TimerPause({required this.duration});
-}
+class TimerEditPageOpen extends TimerEvent {}
 
-class TimerUnPause extends TimerEvent {
-  final Duration duration;
-  const TimerUnPause({required this.duration});
+class TimerEdit extends TimerEvent {
+  final DateTime editStartTime;
+  final Duration durationAfterStart;
+
+  const TimerEdit(
+      {required this.editStartTime, required this.durationAfterStart});
 }
