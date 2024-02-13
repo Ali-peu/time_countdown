@@ -7,6 +7,7 @@ import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 
 class CircularTimer extends StatefulWidget {
+  
   final ValueChanged<Duration> onTimerPause;
   const CircularTimer({required this.onTimerPause, super.key});
 
