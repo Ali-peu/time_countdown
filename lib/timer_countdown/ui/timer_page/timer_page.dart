@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
+import 'package:time_countdown/timer_countdown/domain/validator.dart';
+import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/custom_text.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/second_timer.dart';
 
 class TimerPage extends StatefulWidget {
@@ -42,7 +44,10 @@ class _TimerPageState extends State<TimerPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Малыш уснул в ${getRightTime(timerBloc)}'),
+                  Text(
+                      'Системное время: ${Validator().formatTheDateTime(DateTime.now())}'),
+                  BlocProvider.value(
+                      value: timerBloc, child: const CustomText()),
                   timerInState(timerBloc),
                   playButton(timerBloc, state)
                 ],
@@ -69,14 +74,16 @@ class _TimerPageState extends State<TimerPage> {
     return IconButton(
         onPressed: () async {
           DateTime now = DateTime.now();
-          alertDialogWithDateAndTimeForStartSleep(
-              timerBloc, now, context, 'Start');
+          alertDialogWithDateAndTimeForStartSleep(timerBloc, now, context);
         },
         icon: const Icon(Icons.edit));
   }
 
-  Future<dynamic> alertDialogWithDateAndTimeForStartSleep(TimerBloc timerBloc,
-      DateTime now, BuildContext context, String startOrStop) {
+  Future<dynamic> alertDialogWithDateAndTimeForStartSleep(
+    TimerBloc timerBloc,
+    DateTime now,
+    BuildContext context,
+  ) {
     return showDialog(
         context: context,
         builder: (context) {
@@ -99,11 +106,9 @@ class _TimerPageState extends State<TimerPage> {
             actions: [
               TextButton(
                   onPressed: () async {
-                    timerBloc.add(CloseAlertDialog());
                     if (newPickedTime != null) {
                       newPickedDate ??= now;
                       newPickedTime ?? TimeOfDay.fromDateTime(now);
-
                       newPickedDateAndTime = DateTime(
                           newPickedDate!.year,
                           newPickedDate!.month,
@@ -111,18 +116,12 @@ class _TimerPageState extends State<TimerPage> {
                           newPickedTime!.hour,
                           newPickedTime!.minute);
 
-                      if (startOrStop == 'Stop') {
-                        timerBloc.add(TimerGetNewDateTimeForEnd(
-                            newDatetime: timerBloc.unredactedStartTime!,
-                            stopTime: newPickedDateAndTime,
-                            now: now));
-                      } else {
-                        timerBloc.add(TimerGetNewTimes(
-                          newDatetime: newPickedDateAndTime,
-                          stopTime: DateTime.now(),
-                          now: now,
-                        ));
-                      }
+                      timerBloc.add(TimerGetNewTimes(
+                        newDatetime: newPickedDateAndTime,
+                        stopTime:
+                            timerBloc.unredactedStopTime ?? DateTime.now(),
+                        now: now,
+                      ));
                     }
                     Navigator.of(context).pop();
                   },
@@ -186,7 +185,6 @@ class _TimerPageState extends State<TimerPage> {
 
   Future<dynamic> showDialogIfWasPressedCancel(TimerBloc timerBloc) {
     DateTime stopTime = timerBloc.unredactedStopTime ?? DateTime.now();
-
     log(stopTime.toString(), name: 'Stop time');
     return showDialog(
       context: context,
@@ -199,16 +197,17 @@ class _TimerPageState extends State<TimerPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                    'Малыш уснул в : ${dateFormat(timerBloc.unredactedStartTime!)}'),
+                    'Малыш уснул в : ${Validator().formatTheDateTime(timerBloc.unredactedStartTime!)}'),
                 Text(
                     'Малыш проспал : ${_printDuration(stopTime.difference(timerBloc.unredactedStartTime!))}'),
-                Text('Малыш проснулся в : ${dateFormat(stopTime)}'),
+                Text(
+                    'Малыш проснулся в : ${Validator().formatTheDateTime(stopTime)}'),
                 Row(
                   children: [
                     TextButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          timerBloc.add(TimerStop());
+                          timerBloc.add(TimerStop(dateTime: stopTime));
                         },
                         child: const Text('Сохранить')),
                     TextButton(
@@ -298,7 +297,9 @@ class _TimerPageState extends State<TimerPage> {
                                                       .add(TimerGetNewTimes(
                                                     newDatetime:
                                                         newPickedDateAndTime,
-                                                    stopTime: DateTime.now(),
+                                                    stopTime: timerBloc
+                                                            .unredactedStopTime ??
+                                                        DateTime.now(),
                                                     now: now,
                                                   ));
                                                 }
@@ -350,7 +351,7 @@ class _TimerPageState extends State<TimerPage> {
       } else {
         timerBloc.add(TimerGetNewTimes(
           newDatetime: newPickedDateAndTime,
-          stopTime: DateTime.now(),
+          stopTime: timerBloc.unredactedStopTime ?? DateTime.now(),
           now: now,
         ));
       }

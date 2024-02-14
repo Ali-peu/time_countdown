@@ -30,13 +30,11 @@ class TimerGetNewTimes extends TimerEvent {
       {required this.newDatetime, required this.stopTime, required this.now});
 }
 
-class CloseAlertDialog extends TimerEvent{}
+class TimerStop extends TimerEvent {
+  final DateTime dateTime;
 
-class OpenEditStartAlertDialog extends TimerEvent {}
-
-class OpenEditEndAlertDialog extends TimerEvent {}
-
-class TimerStop extends TimerEvent {}
+  const TimerStop({required this.dateTime});
+}
 
 class TimerError extends TimerEvent {}
 
