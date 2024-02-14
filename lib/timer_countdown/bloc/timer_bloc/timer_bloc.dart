@@ -47,7 +47,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     if (unredactedStartTime == null) {
       add(TimerStart(startDateTime: event.newDatetime));
     } else {
-      if (event.newDatetime.isBefore(event.now) && event.newDatetime.isBefore(event.stopTime)) {
+      if (event.newDatetime.isBefore(event.now) &&
+          event.newDatetime.isBefore(event.stopTime)) {
         timerService.updateStartTime(
             event.newDatetime, event.stopTime, 'Start');
         setUnredactedStartTime(event.newDatetime);
@@ -60,11 +61,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   Future<void> timerError(Emitter<TimerState> emit) async {
-    if (timerService.isClose()) {
-      emit(const TimerState(
-          timerStatus: TimerStatus.initial,
-          result: 'picked Timer isAfter(now)'));
-    }
+    emit(const TimerState(timerStatus: TimerStatus.initial, result: 'error'));
   }
 
   Future<void> _onTimerPlay(TimerStart event, Emitter<TimerState> emit) async {
@@ -80,7 +77,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     timerService.stopTimer();
     timerService.dispose();
     setUnredactedStopTime(event.dateTime);
-    // unredactedStartTime = null; TODO проверить нужен ли тут обнуление
     emit(const TimerState(timerStatus: TimerStatus.stop));
+    return;
   }
 }
