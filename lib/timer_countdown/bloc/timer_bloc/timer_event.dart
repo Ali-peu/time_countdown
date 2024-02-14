@@ -30,6 +30,12 @@ class TimerGetNewTimes extends TimerEvent {
       {required this.newDatetime, required this.stopTime, required this.now});
 }
 
+class CloseAlertDialog extends TimerEvent{}
+
+class OpenEditStartAlertDialog extends TimerEvent {}
+
+class OpenEditEndAlertDialog extends TimerEvent {}
+
 class TimerStop extends TimerEvent {}
 
 class TimerError extends TimerEvent {}

@@ -11,6 +11,20 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   TimerBloc() : super(const TimerState()) {
     on<TimerStart>((event, emit) => _onTimerPlay(event, emit));
     on<TimerStop>((event, emit) => _onTimerStop(event, emit));
+    on<OpenEditStartAlertDialog>((event, emit) => emit(const TimerState()
+        .copyWith(
+            timerStatus: state.timerStatus,
+            alertDialog: 'OpenStart',
+            result: state.result)));
+    on<OpenEditEndAlertDialog>((event, emit) => emit(const TimerState()
+        .copyWith(
+            timerStatus: state.timerStatus,
+            alertDialog: 'OpenEnd',
+            result: state.result)));
+    on<CloseAlertDialog>((event, emit) => emit(const TimerState().copyWith(
+        timerStatus: state.timerStatus,
+        alertDialog: '',
+        result: state.result)));
 
     on<TimerGetNewTimes>((event, emit) => _timerGetNewTimesOrRedected(event));
     on<TimerError>((event, emit) => timerError(emit));

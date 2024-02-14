@@ -68,68 +68,68 @@ class _TimerPageState extends State<TimerPage> {
   Widget onEditTimePressed(TimerBloc timerBloc) {
     return IconButton(
         onPressed: () async {
-          showDialog(
-              context: context,
-              builder: (context) {
-                DateTime now = DateTime.now();
-                return alertDialogWithDateAndTimeForStartSleep(
-                    timerBloc, now, context, 'Start');
-              });
+          DateTime now = DateTime.now();
+          alertDialogWithDateAndTimeForStartSleep(
+              timerBloc, now, context, 'Start');
         },
         icon: const Icon(Icons.edit));
   }
 
-  AlertDialog alertDialogWithDateAndTimeForStartSleep(TimerBloc timerBloc,
+  Future<dynamic> alertDialogWithDateAndTimeForStartSleep(TimerBloc timerBloc,
       DateTime now, BuildContext context, String startOrStop) {
-    return AlertDialog(
-      title: const Text("Выберите дату сна"),
-      content: Row(
-        children: [
-          TextButton(
-              onPressed: () async {
-                newPickedDate = await _showDatePicker(timerBloc);
-              },
-              child: const Text('День')),
-          TextButton(
-              onPressed: () async {
-                newPickedTime = await _showTimePicker(timerBloc);
-              },
-              child: const Text('Время'))
-        ],
-      ),
-      actions: [
-        TextButton(
-            onPressed: () async {
-              if (newPickedTime != null) {
-                newPickedDate ??= now;
-                newPickedTime ?? TimeOfDay.fromDateTime(now);
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Выберите дату сна"),
+            content: Row(
+              children: [
+                TextButton(
+                    onPressed: () async {
+                      newPickedDate = await _showDatePicker(timerBloc);
+                    },
+                    child: const Text('День')),
+                TextButton(
+                    onPressed: () async {
+                      newPickedTime = await _showTimePicker(timerBloc);
+                    },
+                    child: const Text('Время'))
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () async {
+                    timerBloc.add(CloseAlertDialog());
+                    if (newPickedTime != null) {
+                      newPickedDate ??= now;
+                      newPickedTime ?? TimeOfDay.fromDateTime(now);
 
-                newPickedDateAndTime = DateTime(
-                    newPickedDate!.year,
-                    newPickedDate!.month,
-                    newPickedDate!.day,
-                    newPickedTime!.hour,
-                    newPickedTime!.minute);
+                      newPickedDateAndTime = DateTime(
+                          newPickedDate!.year,
+                          newPickedDate!.month,
+                          newPickedDate!.day,
+                          newPickedTime!.hour,
+                          newPickedTime!.minute);
 
-                if (startOrStop == 'Stop') {
-                  timerBloc.add(TimerGetNewDateTimeForEnd(
-                      newDatetime: timerBloc.unredactedStartTime!,
-                      stopTime: newPickedDateAndTime,
-                      now: now));
-                } else {
-                  timerBloc.add(TimerGetNewTimes(
-                    newDatetime: newPickedDateAndTime,
-                    stopTime: DateTime.now(),
-                    now: now,
-                  ));
-                }
-
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('ОК')),
-      ],
-    );
+                      if (startOrStop == 'Stop') {
+                        timerBloc.add(TimerGetNewDateTimeForEnd(
+                            newDatetime: timerBloc.unredactedStartTime!,
+                            stopTime: newPickedDateAndTime,
+                            now: now));
+                      } else {
+                        timerBloc.add(TimerGetNewTimes(
+                          newDatetime: newPickedDateAndTime,
+                          stopTime: DateTime.now(),
+                          now: now,
+                        ));
+                      }
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('ОК')),
+            ],
+          );
+        });
   }
 
   Future<DateTime?> _showDatePicker(TimerBloc timerBloc) async {
@@ -186,89 +186,175 @@ class _TimerPageState extends State<TimerPage> {
 
   Future<dynamic> showDialogIfWasPressedCancel(TimerBloc timerBloc) {
     DateTime stopTime = timerBloc.unredactedStopTime ?? DateTime.now();
+
     log(stopTime.toString(), name: 'Stop time');
     return showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                  'Малыш уснул в : ${dateFormat(timerBloc.unredactedStartTime!)}'),
-              Text(
-                  'Малыш проспал : ${_printDuration(stopTime.difference(timerBloc.unredactedStartTime!))}'),
-              Text('Малыш проснулся в : ${dateFormat(stopTime)}'),
-              Row(
-                children: [
-                  TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        timerBloc.add(TimerStop());
-                      },
-                      child: const Text('Сохранить')),
-                  TextButton(
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('Редактировать время'),
-                                content: Row(
-                                  children: [
-                                    TextButton(
-                                        onPressed: () async {
-                                          DateTime now = DateTime.now();
-                                          showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return alertDialogWithDateAndTimeForStartSleep(
-                                                    timerBloc,
-                                                    now,
-                                                    context,
-                                                    'Start');
-                                              });
-                                        },
-                                        child: const Text('Начало')),
-                                    TextButton(
-                                        onPressed: () async {
-                                          DateTime now = DateTime.now();
-                                          showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return alertDialogWithDateAndTimeForStartSleep(
-                                                    timerBloc,
-                                                    now,
-                                                    context,
-                                                    'Stop'); //TODO Stop
-                                              });
-                                        },
-                                        child: const Text('Конец сна'))
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('OK'))
-                                ],
-                              );
-                            });
-                      },
-                      child: const Text('Редактировать')),
-                  TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Продолжить'))
-                ],
-              )
-            ],
-          ),
-        );
+        return StatefulBuilder(builder: (context, setStater) {
+          String contentText = "Content of Dialog";
+          String startOrStop = '';
+          return Dialog(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                    'Малыш уснул в : ${dateFormat(timerBloc.unredactedStartTime!)}'),
+                Text(
+                    'Малыш проспал : ${_printDuration(stopTime.difference(timerBloc.unredactedStartTime!))}'),
+                Text('Малыш проснулся в : ${dateFormat(stopTime)}'),
+                Row(
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          timerBloc.add(TimerStop());
+                        },
+                        child: const Text('Сохранить')),
+                    TextButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return StatefulBuilder(
+                                    builder: (context, customSetStater) {
+                                  return AlertDialog(
+                                    title: Text(contentText),
+                                    content: Row(
+                                      children: [
+                                        if (firstOrSecondAlertDialog == 'first')
+                                          TextButton(
+                                              onPressed: () {
+                                                customSetStater(() {
+                                                  firstOrSecondAlertDialog =
+                                                      'second';
+                                                  startOrStop = 'Start';
+                                                });
+                                              },
+                                              child: const Text('Начало')),
+                                        if (firstOrSecondAlertDialog == 'first')
+                                          TextButton(
+                                              onPressed: () {
+                                                customSetStater(() {
+                                                  firstOrSecondAlertDialog =
+                                                      'second';
+                                                  startOrStop = 'Stop';
+                                                });
+                                              },
+                                              child: const Text('Конец')),
+                                        if (firstOrSecondAlertDialog ==
+                                            'second')
+                                          TextButton(
+                                              onPressed: () async {
+                                                newPickedDate =
+                                                    await _showDatePicker(
+                                                        timerBloc);
+                                              },
+                                              child: const Text('Дата')),
+                                        if (firstOrSecondAlertDialog ==
+                                            'second')
+                                          TextButton(
+                                              onPressed: () async {
+                                                newPickedTime =
+                                                    await _showTimePicker(
+                                                        timerBloc);
+                                              },
+                                              child: const Text('Время'))
+                                      ],
+                                    ),
+                                    actions: [
+                                      if (firstOrSecondAlertDialog == 'first')
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('OK')),
+                                      if (firstOrSecondAlertDialog == 'second')
+                                        TextButton(
+                                            onPressed: () {
+                                              DateTime now = DateTime.now();
+                                              if (newPickedTime != null) {
+                                                newPickedDate ??= now;
+                                                newPickedTime ??
+                                                    TimeOfDay.fromDateTime(now);
+
+                                                newPickedDateAndTime = DateTime(
+                                                    newPickedDate!.year,
+                                                    newPickedDate!.month,
+                                                    newPickedDate!.day,
+                                                    newPickedTime!.hour,
+                                                    newPickedTime!.minute);
+
+                                                if (startOrStop == 'Stop') {
+                                                  timerBloc.add(
+                                                      TimerGetNewDateTimeForEnd(
+                                                          newDatetime: timerBloc
+                                                              .unredactedStartTime!,
+                                                          stopTime:
+                                                              newPickedDateAndTime,
+                                                          now: now));
+                                                } else {
+                                                  timerBloc
+                                                      .add(TimerGetNewTimes(
+                                                    newDatetime:
+                                                        newPickedDateAndTime,
+                                                    stopTime: DateTime.now(),
+                                                    now: now,
+                                                  ));
+                                                }
+                                              }
+                                              Navigator.of(context).pop();
+                                              firstOrSecondAlertDialog =
+                                                  'first';
+                                            },
+                                            child: const Text('ОК'))
+                                    ],
+                                  );
+                                });
+                              });
+                        },
+                        child: const Text('Редактировать')),
+                    TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Продолжить'))
+                  ],
+                )
+              ],
+            ),
+          );
+        });
       },
     );
+  }
+
+  String firstOrSecondAlertDialog = 'first';
+
+  Future<void> alertDialogPressed(
+      TimerBloc timerBloc, String startOrStop) async {
+    DateTime now = DateTime.now();
+
+    if (newPickedTime != null) {
+      newPickedDate ??= now;
+      newPickedTime ?? TimeOfDay.fromDateTime(now);
+
+      newPickedDateAndTime = DateTime(newPickedDate!.year, newPickedDate!.month,
+          newPickedDate!.day, newPickedTime!.hour, newPickedTime!.minute);
+
+      if (startOrStop == 'Stop') {
+        timerBloc.add(TimerGetNewDateTimeForEnd(
+            newDatetime: timerBloc.unredactedStartTime!,
+            stopTime: newPickedDateAndTime,
+            now: now));
+      } else {
+        timerBloc.add(TimerGetNewTimes(
+          newDatetime: newPickedDateAndTime,
+          stopTime: DateTime.now(),
+          now: now,
+        ));
+      }
+    }
   }
 }
 
