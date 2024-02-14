@@ -15,19 +15,19 @@ class TimerStart extends TimerEvent {
 class TimerGetNewDateTimeForEnd extends TimerEvent {
   final DateTime newDatetime;
   final DateTime stopTime;
+  final DateTime now;
 
   const TimerGetNewDateTimeForEnd(
-      {required this.newDatetime, required this.stopTime});
+      {required this.newDatetime, required this.stopTime, required this.now});
 }
 
 class TimerGetNewTimes extends TimerEvent {
   final DateTime newDatetime;
   final DateTime stopTime;
-  final String startOrStop;
+  final DateTime now;
+
   const TimerGetNewTimes(
-      {required this.startOrStop,
-      required this.newDatetime,
-      required this.stopTime});
+      {required this.newDatetime, required this.stopTime, required this.now});
 }
 
 class TimerStop extends TimerEvent {}

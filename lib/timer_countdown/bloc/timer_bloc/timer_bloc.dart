@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:time_countdown/timer_countdown/data/custom_timer.dart';
@@ -8,22 +6,6 @@ part 'timer_event.dart';
 part 'timer_state.dart';
 
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
-  DateTime? _unredactedStartTime;
-
-  DateTime? get unredactedStartTime => _unredactedStartTime;
-
-  void setUnredactedStartTime(DateTime dateTime) {
-    _unredactedStartTime = dateTime;
-  }
-
-  DateTime? _unredactedStopTime;
-
-  DateTime? get unredactedStopTime => _unredactedStopTime;
-
-  void setUnredactedStopTime(DateTime value) {
-    _unredactedStopTime = value;
-  }
-
   TimerService timerService = TimerService();
 
   TimerBloc() : super(const TimerState()) {
@@ -37,42 +19,31 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         (event, emit) => _timerGetNewDateTimeForEnd(event));
   }
 
-  void _timerGetNewDateTimeForEnd(TimerGetNewDateTimeForEnd event) {
-    setUnredactedStopTime(event.stopTime);
-    timerService.updateStartTime(event.newDatetime, event.stopTime, 'Stop');
-    add(TimerStart(startDateTime: unredactedStartTime!));
+  Future<void> _timerGetNewDateTimeForEnd(
+      TimerGetNewDateTimeForEnd event) async {
+    if (!event.stopTime.isAfter(unredactedStartTime!) ||
+        event.stopTime.isAfter(event.now)) {
+      add(TimerError());
+    } else {
+      setUnredactedStopTime(event.stopTime);
+      timerService.updateStartTime(event.newDatetime, event.stopTime, 'Stop');
+      add(TimerStart(startDateTime: unredactedStartTime!));
+    }
   }
 
   Future<void> _timerGetNewTimesOrRedected(TimerGetNewTimes event) async {
-    DateTime now = DateTime.now();
-
-    log(event.newDatetime.toString(), name: 'Event newDateTime');
-    if (unredactedStartTime != null) {
-      log(unredactedStartTime.toString(), name: 'Bloc unredactedStartTime');
-    } else {
-      log('NULL', name: 'Bloc unredactedStartTime null');
-    }
-
     if (unredactedStartTime == null) {
       add(TimerStart(startDateTime: event.newDatetime));
     } else {
-      if (event.newDatetime.isBefore(now)) {
-        //TODO now получить со евента
-        
-      }
-
-      if (event.startOrStop == 'Start') {
+      if (event.newDatetime.isBefore(event.now)) {
         timerService.updateStartTime(
             event.newDatetime, event.stopTime, 'Start');
+        setUnredactedStartTime(event.newDatetime);
+
+        add(TimerStart(startDateTime: unredactedStartTime!));
       } else {
-        setUnredactedStopTime(event.stopTime);
-        log('IS It printed');
-        timerService.updateStartTime(event.newDatetime, event.stopTime, 'Stop');
+        add(TimerError());
       }
-
-      setUnredactedStartTime(event.newDatetime);
-
-      add(TimerStart(startDateTime: unredactedStartTime!));
     }
   }
 
@@ -99,5 +70,21 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     timerService.stopTimer();
     // unredactedStartTime = null; TODO проверить нужен ли тут обнуление
     emit(const TimerState(timerStatus: TimerStatus.stop));
+  }
+
+  DateTime? _unredactedStartTime;
+
+  DateTime? get unredactedStartTime => _unredactedStartTime;
+
+  void setUnredactedStartTime(DateTime dateTime) {
+    _unredactedStartTime = dateTime;
+  }
+
+  DateTime? _unredactedStopTime;
+
+  DateTime? get unredactedStopTime => _unredactedStopTime;
+
+  void setUnredactedStopTime(DateTime value) {
+    _unredactedStopTime = value;
   }
 }
