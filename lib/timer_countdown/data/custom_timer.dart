@@ -34,6 +34,7 @@ class TimerService {
           name:
               'Проверка условии из самой TimerServise,newStartTime.isBefore(DateTime.now()).toString()');
       if (_startTime != null) {
+        isStart = true;
         bool a = _startTime != null;
         log(a.toString(),
             name: 'Проверка условии из самой TimerServise _startTime != null');

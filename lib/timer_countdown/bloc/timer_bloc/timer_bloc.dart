@@ -16,52 +16,72 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     _unredactedStartTime = dateTime;
   }
 
-  set unredactedStartTime(DateTime? value) {
-    _unredactedStartTime = value;
+  DateTime? _unredactedStopTime;
+
+  DateTime? get unredactedStopTime => _unredactedStopTime;
+
+  void setUnredactedStopTime(DateTime value) {
+    _unredactedStopTime = value;
   }
 
-  DateTime? unredactedStopTime;
   TimerService timerService = TimerService();
+
   TimerBloc() : super(const TimerState()) {
     on<TimerStart>((event, emit) => _onTimerPlay(event, emit));
     on<TimerStop>((event, emit) => _onTimerStop(event, emit));
 
-    on<TimerGetNewTimes>((event, emit) {
-      log(event.newDatetime.toString(), name: 'Event newDateTime');
-      if (unredactedStartTime != null) {
-        log(unredactedStartTime.toString(), name: 'Bloc unredactedStartTime');
+    on<TimerGetNewTimes>((event, emit) => _timerGetNewTimesOrRedected(event));
+    on<TimerError>((event, emit) => timerError(emit));
+
+    on<TimerGetNewDateTimeForEnd>(
+        (event, emit) => _timerGetNewDateTimeForEnd(event));
+  }
+
+  void _timerGetNewDateTimeForEnd(TimerGetNewDateTimeForEnd event) {
+    setUnredactedStopTime(event.stopTime);
+    timerService.updateStartTime(event.newDatetime, event.stopTime, 'Stop');
+    add(TimerStart(startDateTime: unredactedStartTime!));
+  }
+
+  Future<void> _timerGetNewTimesOrRedected(TimerGetNewTimes event) async {
+    DateTime now = DateTime.now();
+
+    log(event.newDatetime.toString(), name: 'Event newDateTime');
+    if (unredactedStartTime != null) {
+      log(unredactedStartTime.toString(), name: 'Bloc unredactedStartTime');
+    } else {
+      log('NULL', name: 'Bloc unredactedStartTime null');
+    }
+
+    if (unredactedStartTime == null) {
+      add(TimerStart(startDateTime: event.newDatetime));
+    } else {
+      if (event.newDatetime.isBefore(now)) {
+        //TODO now получить со евента
+        
+      }
+
+      if (event.startOrStop == 'Start') {
+        timerService.updateStartTime(
+            event.newDatetime, event.stopTime, 'Start');
       } else {
-        log('NULL', name: 'Bloc unredactedStartTime null');
+        setUnredactedStopTime(event.stopTime);
+        log('IS It printed');
+        timerService.updateStartTime(event.newDatetime, event.stopTime, 'Stop');
       }
 
-      if (unredactedStartTime == null) {
-        add(TimerStart(startDateTime: event.newDatetime));
-      } else {
-        if (event.startOrStop == 'Start') {
-          timerService.updateStartTime(
-              event.newDatetime, event.stopTime, 'Start');
-        } else {
-          timerService.updateStartTime(
-              event.newDatetime, event.stopTime, 'Stop');
-        }
+      setUnredactedStartTime(event.newDatetime);
 
-        setUnredactedStartTime(event.newDatetime);
+      add(TimerStart(startDateTime: unredactedStartTime!));
+    }
+  }
 
-        add(TimerStart(startDateTime: unredactedStartTime!));
-      }
-    });
-    on<TimerError>((event, emit) {
-      if (timerService.isClose()) {
-        emit(const TimerState(
-            timerStatus: TimerStatus.initial,
-            result: 'picked Timer isAfter(now)'));
-        return;
-      }
-    });
-
-    on<TimerStopTimeSave>((event, emit) {
-      unredactedStopTime = event.stopTime;
-    });
+  Future<void> timerError(Emitter<TimerState> emit) async {
+    if (timerService.isClose()) {
+      emit(const TimerState(
+          timerStatus: TimerStatus.initial,
+          result: 'picked Timer isAfter(now)'));
+    }
   }
 
   Future<void> _onTimerPlay(TimerStart event, Emitter<TimerState> emit) async {
@@ -69,13 +89,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       timerService = TimerService();
     }
     setUnredactedStartTime(event.startDateTime);
-
-    if (unredactedStartTime != null) {
-      log(unredactedStartTime.toString(),
-          name: 'Bloc unredactedStartTime _onTimerPlay');
-    } else {
-      log('NULL', name: 'Bloc unredactedStartTime null _onTimerPlay');
-    }
 
     timerService.startTimer(event.startDateTime);
     emit(const TimerState(timerStatus: TimerStatus.play, result: ''));
@@ -86,13 +99,5 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     timerService.stopTimer();
     // unredactedStartTime = null; TODO проверить нужен ли тут обнуление
     emit(const TimerState(timerStatus: TimerStatus.stop));
-  }
-
-  String _printDuration(Duration duration) {
-    String negativeSign = duration.isNegative ? '-' : '';
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60).abs());
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60).abs());
-    return "$negativeSign${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 }
