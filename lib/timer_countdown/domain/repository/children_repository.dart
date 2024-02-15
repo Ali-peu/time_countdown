@@ -6,8 +6,7 @@ import 'package:time_countdown/timer_countdown/domain/models/child_model.dart';
 class ChildrenRepository {
   Future<void> testCreateChild() async {
     await childrenDatabase.testInsertBabyAli();
-    await childrenDatabase.testInsertBabyNurbak();
-    await childrenDatabase.testInsertBabyRandom();
+  
   }
 
   Future<List<ChildModel>> testGetAllChild() async {

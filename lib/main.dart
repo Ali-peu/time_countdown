@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/simple_bloc_observer.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
-import 'package:time_countdown/timer_countdown/data/globals/globals.dart';
+
 import 'package:time_countdown/timer_countdown/domain/repository/child_sleep_time_stat_repository.dart';
 import 'package:time_countdown/timer_countdown/domain/repository/children_repository.dart';
 
@@ -13,8 +13,6 @@ import 'package:time_countdown/timer_countdown/ui/timer_page/timer_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = DetailedBlocObserver();
-
-  await childrenDatabase.getChildren();
 
   log('Main after getChilderan');
   runApp(const App());

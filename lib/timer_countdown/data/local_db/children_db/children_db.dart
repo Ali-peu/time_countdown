@@ -1,5 +1,6 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -29,6 +30,37 @@ class ChildSleepTimeStat extends Table {
 }
 // ... the TodoItems table definition stays the same
 
+bool getRandomBool() {
+  final random = Random();
+  return random.nextBool();
+}
+
+String getRandomFirstName() {
+  final List<String> firstNames = [
+    'Alice', 'Bob', 'Charlie', 'David', 'Emma', 'Frank', 'Grace', 'Henry',
+    'Ivy', 'Jack'
+    // Add more names as needed
+  ];
+
+  Random random = Random();
+  return firstNames[random.nextInt(firstNames.length)];
+}
+
+String getRandomLastName() {
+  final List<String> lastNames = [
+    'Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller',
+    'Wilson', 'Moore', 'Taylor'
+    // Add more last names as needed
+  ];
+
+  Random random = Random();
+  return lastNames[random.nextInt(lastNames.length)];
+}
+
+String getRandomFullName() {
+  return '${getRandomFirstName()} ${getRandomLastName()}';
+}
+
 @DriftDatabase(tables: [Children, ChildSleepTimeStat])
 class ChildrenDatabase extends _$ChildrenDatabase {
   ChildrenDatabase() : super(_openConnection());
@@ -52,7 +84,7 @@ class ChildrenDatabase extends _$ChildrenDatabase {
           babyWakeUpDateTime: model.babyWakeUpDateTime,
           duration: model.duration.inSeconds));
     } on Exception catch (error) {
-      log(error.toString(),
+      dev.log(error.toString(),
           name:
               'Error on insert childSleepTimeStatCompanion into childSleepTimeStat');
     }
@@ -60,13 +92,14 @@ class ChildrenDatabase extends _$ChildrenDatabase {
 
   Future<List<ChildSleepTimeStatModel>> getChildSleepTimeStats() async {
     var childSleepTimeStats = [];
-    log('getChildSleepTimeStats Future<List<ChildSleepTimeStatModel>> ChildSleepTimeStat');
+    dev.log(
+        'getChildSleepTimeStats Future<List<ChildSleepTimeStatModel>> ChildSleepTimeStat');
     try {
       childSleepTimeStats =
           await select(childrenDatabase.childSleepTimeStat).get();
-      log('Success on childSleepTimeStatDatabase');
+      dev.log('Success on childSleepTimeStatDatabase');
     } on Exception catch (error) {
-      log(error.toString(),
+      dev.log(error.toString(),
           name:
               'Errors on get childSleepTimeStat from childSleepTimeStatDatabase');
     }
@@ -92,17 +125,9 @@ class ChildrenDatabase extends _$ChildrenDatabase {
   // }
   Future<void> testInsertBabyAli() async {
     await into(children).insert(ChildrenCompanion.insert(
-        name: 'Ali', babyBirthday: DateTime(2007, 7, 20), gender: true));
-  }
-
-  Future<void> testInsertBabyNurbak() async {
-    await into(children).insert(ChildrenCompanion.insert(
-        name: 'Nurbak', babyBirthday: DateTime(2003, 5, 27), gender: true));
-  }
-
-  Future<void> testInsertBabyRandom() async {
-    await into(children).insert(ChildrenCompanion.insert(
-        name: 'Random', babyBirthday: DateTime(2000, 7, 13), gender: false));
+        name: getRandomFullName(),
+        babyBirthday: DateTime.now(),
+        gender: getRandomBool()));
   }
 
   Future<void> deletaAll() async {
@@ -113,9 +138,10 @@ class ChildrenDatabase extends _$ChildrenDatabase {
     var children = [];
     try {
       children = await select(childrenDatabase.children).get();
-      log('Success on childrenDatabase');
+      dev.log('Success on childrenDatabase');
     } on Exception catch (e) {
-      log(e.toString(), name: 'Errors on get children from childrenDatabase');
+      dev.log(e.toString(),
+          name: 'Errors on get children from childrenDatabase');
     }
 
     final result = <ChildModel>[];
@@ -123,7 +149,7 @@ class ChildrenDatabase extends _$ChildrenDatabase {
       result.add(ChildModel.fromLocal(child as ChildrenData));
     }
 
-    log(result.toString(), name: 'ChildrenDatabase getChildren children');
+    dev.log(result.toString(), name: 'ChildrenDatabase getChildren children');
     return result;
   }
 }

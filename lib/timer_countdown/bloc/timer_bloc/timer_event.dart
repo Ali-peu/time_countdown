@@ -14,6 +14,12 @@ class TimerStart extends TimerEvent {
   const TimerStart({required this.startDateTime});
 }
 
+class GetPickedChildId extends TimerEvent {
+  final int pickedBabyId;
+
+  const GetPickedChildId({required this.pickedBabyId});
+}
+
 class TimerGetNewDateTimeForEnd extends TimerEvent {
   final DateTime newDatetime;
   final DateTime stopTime;

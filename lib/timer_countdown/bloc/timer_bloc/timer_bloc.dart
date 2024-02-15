@@ -14,6 +14,7 @@ part 'timer_state.dart';
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
   DateTime? _unredactedStartTime;
   DateTime? get unredactedStartTime => _unredactedStartTime;
+
   void setUnredactedStartTime(DateTime dateTime) {
     _unredactedStartTime = dateTime;
   }
@@ -28,6 +29,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   ChildrenRepository childrenRepository;
   ChildSleepTimeStatRepository childSleepTimeStatRepository;
+
+  int? pickedBabyId;
 
   TimerBloc(
       {required this.childrenRepository,
@@ -44,6 +47,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       emit(TimerState(
           listChildSleepTimeStats: childSleepTimeStats,
           listChildren: state.listChildren));
+    });
+    on<GetPickedChildId>((event, emit) {
+      pickedBabyId = event.pickedBabyId;
     });
     on<TimerStart>(_onTimerPlay);
     on<TimerStop>(_onTimerStop);

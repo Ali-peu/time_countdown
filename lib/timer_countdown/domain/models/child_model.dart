@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 
 import 'package:time_countdown/timer_countdown/data/local_db/children_db/children_db.dart';
 
+DateTime now = DateTime.now();
+
 class ChildModel extends Equatable {
   final String name;
   final DateTime childBirthday;
@@ -11,6 +13,12 @@ class ChildModel extends Equatable {
 
   const ChildModel(this.childId,
       {required this.name, required this.childBirthday, required this.gender});
+
+  ChildModel.withDefaults()
+      : childId = 0,
+        name = '',
+        childBirthday = DateTime.now(),
+        gender = true;
 
   ChildModel.fromLocal(ChildrenData data)
       : name = data.name,
