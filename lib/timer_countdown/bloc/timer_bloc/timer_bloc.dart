@@ -1,6 +1,12 @@
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:time_countdown/timer_countdown/data/custom_timer.dart';
+import 'package:time_countdown/timer_countdown/domain/models/child_model.dart';
+import 'package:time_countdown/timer_countdown/domain/models/child_sleep_time_stat_model.dart';
+import 'package:time_countdown/timer_countdown/domain/repository/child_sleep_time_stat_repository.dart';
+import 'package:time_countdown/timer_countdown/domain/repository/children_repository.dart';
 
 part 'timer_event.dart';
 part 'timer_state.dart';
@@ -20,15 +26,47 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   TimerService timerService = TimerService();
 
-  TimerBloc() : super(const TimerState()) {
-    on<TimerStart>((event, emit) => _onTimerPlay(event, emit));
-    on<TimerStop>((event, emit) => _onTimerStop(event, emit));
+  ChildrenRepository childrenRepository;
+  ChildSleepTimeStatRepository childSleepTimeStatRepository;
+
+  TimerBloc(
+      {required this.childrenRepository,
+      required this.childSleepTimeStatRepository})
+      : super(const TimerState()) {
+    on<FetchedChildrens>((event, emit) async {
+      await _onFetchedChildrens(emit);
+    });
+    on<FetchedListChildSleepTimeStats>((event, emit) async {
+      var childSleepTimeStats = <ChildSleepTimeStatModel>[];
+      childSleepTimeStats =
+          await childSleepTimeStatRepository.getchildSleepTimeStats();
+
+      emit(TimerState(
+          listChildSleepTimeStats: childSleepTimeStats,
+          listChildren: state.listChildren));
+    });
+    on<TimerStart>(_onTimerPlay);
+    on<TimerStop>(_onTimerStop);
 
     on<TimerGetNewTimes>((event, emit) => _timerGetNewTimesOrRedected(event));
     on<TimerError>((event, emit) => timerError(emit));
 
     on<TimerGetNewDateTimeForEnd>(
         (event, emit) => _timerGetNewDateTimeForEnd(event));
+  }
+
+  Future<void> _onFetchedChildrens(Emitter<TimerState> emit) async {
+    var childrens = <ChildModel>[];
+    childrens = await childrenRepository.testGetAllChild();
+
+    if (childrens.isEmpty) {
+      emit(const TimerState(timerPageStatus: TimerPageStatus.failure));
+    } else {
+      emit(TimerState(
+          listChildren: childrens, timerPageStatus: TimerPageStatus.success));
+    }
+
+    log('Log after emitts');
   }
 
   Future<void> _timerGetNewDateTimeForEnd(
@@ -61,7 +99,10 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   Future<void> timerError(Emitter<TimerState> emit) async {
-    emit(const TimerState(timerStatus: TimerStatus.initial, result: 'error'));
+    emit(TimerState(
+        timerStatus: TimerStatus.initial,
+        listChildSleepTimeStats: state.listChildSleepTimeStats,
+        listChildren: state.listChildren));
   }
 
   Future<void> _onTimerPlay(TimerStart event, Emitter<TimerState> emit) async {
@@ -70,14 +111,30 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
     setUnredactedStartTime(event.startDateTime);
     timerService.startTimer(event.startDateTime);
-    emit(const TimerState(timerStatus: TimerStatus.play, result: ''));
+    emit(TimerState(
+        timerStatus: TimerStatus.play,
+        listChildSleepTimeStats: state.listChildSleepTimeStats,
+        listChildren: state.listChildren));
   }
 
   Future<void> _onTimerStop(TimerStop event, Emitter<TimerState> emit) async {
-    timerService.stopTimer();
-    timerService.dispose();
     setUnredactedStopTime(event.dateTime);
-    emit(const TimerState(timerStatus: TimerStatus.stop));
-    return;
+
+    final babySleepTime = unredactedStartTime ?? DateTime.now();
+    final babyWakeUpTime = unredactedStopTime ?? DateTime.now();
+
+    final duration = babyWakeUpTime.difference(babySleepTime);
+
+    await childSleepTimeStatRepository.createChildAllSleepTimerStats(
+        babySleepTime, babyWakeUpTime, duration, event.babyID);
+    add(FetchedListChildSleepTimeStats());
+
+    await timerService.stopTimer();
+    await timerService.dispose();
+
+    emit(TimerState(
+        timerStatus: TimerStatus.stop,
+        listChildSleepTimeStats: state.listChildSleepTimeStats,
+        listChildren: state.listChildren));
   }
 }

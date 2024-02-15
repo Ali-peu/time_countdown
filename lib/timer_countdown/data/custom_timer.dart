@@ -43,7 +43,7 @@ class TimerService {
     }
   }
 
-  void stopTimer() {
+  Future<void> stopTimer()async {
     _timer?.cancel();
   }
 
@@ -55,7 +55,7 @@ class TimerService {
     }
   }
 
-  void dispose() {
-    _timerController.close();
+  Future<void> dispose()async {
+    await _timerController.close();
   }
 }

@@ -7,6 +7,8 @@ sealed class TimerEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class FetchedChildrens extends TimerEvent {}
+
 class TimerStart extends TimerEvent {
   final DateTime startDateTime;
   const TimerStart({required this.startDateTime});
@@ -30,10 +32,13 @@ class TimerGetNewTimes extends TimerEvent {
       {required this.newDatetime, required this.stopTime, required this.now});
 }
 
+class FetchedListChildSleepTimeStats extends TimerEvent {}
+
 class TimerStop extends TimerEvent {
   final DateTime dateTime;
+  final int babyID;
 
-  const TimerStop({required this.dateTime});
+  const TimerStop({required this.dateTime, required this.babyID});
 }
 
 class TimerError extends TimerEvent {}

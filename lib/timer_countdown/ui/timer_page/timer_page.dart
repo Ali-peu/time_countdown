@@ -2,8 +2,14 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
+import 'package:time_countdown/timer_countdown/data/globals/globals.dart';
+import 'package:time_countdown/timer_countdown/domain/models/child_model.dart';
+import 'package:time_countdown/timer_countdown/domain/models/child_sleep_time_stat_model.dart';
+import 'package:time_countdown/timer_countdown/domain/repository/child_sleep_time_stat_repository.dart';
+import 'package:time_countdown/timer_countdown/domain/repository/children_repository.dart';
 import 'package:time_countdown/timer_countdown/domain/validator.dart';
-import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/custom_text.dart';
+import 'package:time_countdown/timer_countdown/ui/stats_page/stats_page.dart';
+
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/second_timer.dart';
 
 class TimerPage extends StatefulWidget {
@@ -14,20 +20,61 @@ class TimerPage extends StatefulWidget {
 }
 
 class _TimerPageState extends State<TimerPage> {
+  Future<void> showStats() async {
+    log('Снизу прямое обращение Stats к репозиторий в самом initState и его результать');
+    await ChildSleepTimeStatRepository().getchildSleepTimeStats();
+  }
+
+  Future<void> createStats() async {
+    log('Снизу прямое обращение Stats к репозиторий в самом initState и его результать');
+    await ChildSleepTimeStatRepository().testInsert();
+  }
+
+  void deleteChild() {
+    log('Удалякм таблицу');
+    ChildrenRepository().deletaAll();
+  }
+
+  Future<void> createChilds() async {
+    log('Снизу прямое обращение к репозиторий в самом initState и его результать : createChilds');
+    await ChildrenRepository().testCreateChild();
+  }
+
+  Future<void> showChilds() async {
+    log('Снизу прямое обращение к репозиторий в самом initState и его результать');
+    await ChildrenRepository().testGetAllChild();
+  }
+
   DateTime? newPickedDate;
   TimeOfDay? newPickedTime;
 
   late DateTime newPickedDateAndTime;
+  ChildModel? chooseChildModel;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    showChilds();
+    showStats();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<TimerBloc, TimerState>(
         listener: (context, state) {
-          if (state.result.isNotEmpty) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(state.result)));
+          if (state.timerPageStatus == TimerPageStatus.failure) {
+            // TODO Delete this
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return const Dialog.fullscreen();
+                });
           }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.timerStatus.toString())));
         },
         child: BlocBuilder<TimerBloc, TimerState>(
           builder: (context, state) {
@@ -35,6 +82,83 @@ class _TimerPageState extends State<TimerPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  FutureBuilder<List<ChildSleepTimeStatModel>>(
+                      future: Future.value(context
+                          .read<TimerBloc>()
+                          .state
+                          .listChildSleepTimeStats),
+                      builder: (context, snapshot) {
+                        if (snapshot.data == null) {
+                          return const Text('snapthot.data == null');
+                        }
+                        if (snapshot.hasData) {
+                          if (snapshot.data!.isNotEmpty) {
+                            final stats = snapshot.data!;
+                            return SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              height: MediaQuery.of(context).size.height * 0.3,
+                              child: ListView.builder(
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(Validator().formatTheDateTime(
+                                        stats[index].babySleepDateTime)),
+                                    subtitle: Text(Validator()
+                                        .formatTheDateTime(
+                                            stats[index].babyWakeUpDateTime)),
+                                    trailing: Text(Validator()
+                                        .printDuration(stats[index].duration)),
+                                    leading:
+                                        Text(stats[index].babyId.toString()),
+                                  );
+                                },
+                                itemCount: stats.length,
+                              ),
+                            );
+                          } else {
+                            return const Text('snapshot.data!.isEmpty');
+                          }
+                        } else {
+                          return const Text('!snapshot.hasData');
+                        }
+                      }),
+                  FutureBuilder<List<ChildModel>>(
+                      future: Future.value(
+                          context.read<TimerBloc>().state.listChildren),
+                      builder: (context, snapshot) {
+                        if (snapshot.data == null) {
+                          return const Text(
+                              'no elements: snapshot.data == null)');
+                        } else {
+                          if (snapshot.hasData) {
+                            if (snapshot.data!.isNotEmpty) {
+                              final listChild = snapshot.data!;
+                              if (chooseChildModel == null) {
+                                log('chooseModel == null');
+                                chooseChildModel = listChild.first;
+                              }
+
+                              return DropdownButton<ChildModel>(
+                                  value: chooseChildModel,
+                                  items: listChild.map((child) {
+                                    return DropdownMenuItem<ChildModel>(
+                                        value: child, child: Text(child.name));
+                                  }).toList(),
+                                  onChanged: (child) {
+                                    chooseChildModel = child;
+                                    setState(() {});
+                                    log('OnChange ${child!.name}');
+
+                                    log('OnChange ${chooseChildModel!.name}');
+                                  });
+                            } else {
+                              return const Text(
+                                  'snapshot has data, but its empty');
+                            }
+                          } else {
+                            return const Text('snapshot not has data');
+                          }
+                        }
+                      }),
                   Text(
                       'Системное время: ${Validator().formatTheDateTime(DateTime.now())}'),
                   if (state.timerStatus == TimerStatus.initial)
@@ -213,9 +337,9 @@ class _TimerPageState extends State<TimerPage> {
                     TextButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          context
-                              .read<TimerBloc>()
-                              .add(TimerStop(dateTime: stopTime));
+                          context.read<TimerBloc>().add(TimerStop(
+                              dateTime: stopTime,
+                              babyID: chooseChildModel!.childId));
                         },
                         child: const Text('Сохранить')),
                     TextButton(
@@ -313,7 +437,7 @@ class _TimerPageState extends State<TimerPage> {
                                                   ));
                                                 }
                                               }
-                                              Navigator.of(context).pop();
+                                              Navigator.pop(context);
                                               firstOrSecondAlertDialog =
                                                   'first';
                                             },
@@ -326,7 +450,6 @@ class _TimerPageState extends State<TimerPage> {
                         child: const Text('Редактировать')),
                     TextButton(
                         onPressed: () {
-                          setState(() {});
                           Navigator.pop(context);
                         },
                         child: const Text('Продолжить'))
