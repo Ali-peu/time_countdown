@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
+import 'package:time_countdown/timer_countdown/domain/validator.dart';
 
 class EditIcon extends StatefulWidget {
   const EditIcon({super.key});
@@ -9,7 +12,7 @@ class EditIcon extends StatefulWidget {
   State<EditIcon> createState() => _EditIconState();
 }
 
-class _EditIconState extends State<EditIcon> {
+class _EditIconState extends State<EditIcon> { // TODO Надо обнавить значение
   DateTime? newPickedDate;
   TimeOfDay? newPickedTime;
 
@@ -27,50 +30,41 @@ class _EditIconState extends State<EditIcon> {
   Future<dynamic> alertDialogWithDateAndTimeForStartSleep(
     DateTime now,
     BuildContext context,
-  ) async{
+  ) async {
     return showDialog(
         context: context,
         builder: (_) {
+          final now = DateTime.now();
+
           return AlertDialog(
-            title: const Text("Выберите дату сна"),
+            title: const Text('Выберите дату сна'),
             content: Row(
               children: [
                 TextButton(
                     onPressed: () async {
                       newPickedDate =
                           await _showDatePicker(context.read<TimerBloc>());
+
+                    
                     },
-                    child: const Text('День')),
+                    child: Text(
+                        Validator().creatingDataDay(newPickedDate ?? now))),
                 TextButton(
                     onPressed: () async {
                       newPickedTime =
                           await _showTimePicker(context.read<TimerBloc>());
+                     
                     },
-                    child: const Text('Время'))
+                    child: Text(Validator().formatTheTimeOfDay(newPickedTime ??
+                        TimeOfDay.fromDateTime(newPickedDate ?? now))))
               ],
             ),
             actions: [
               TextButton(
                   onPressed: () async {
-                    if (newPickedTime != null) {
-                      newPickedDate ??= now;
-                      newPickedTime ?? TimeOfDay.fromDateTime(now);
-                      newPickedDateAndTime = DateTime(
-                          newPickedDate!.year,
-                          newPickedDate!.month,
-                          newPickedDate!.day,
-                          newPickedTime!.hour,
-                          newPickedTime!.minute);
+                    playTimerFromIconEditPressedOk(now, context);
 
-                      context.read<TimerBloc>().add(TimerGetNewTimes(
-                            newDatetime: newPickedDateAndTime,
-                            stopTime:
-                                context.read<TimerBloc>().unredactedStopTime ??
-                                    DateTime.now(),
-                            now: now,
-                          ));
-                    }
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
                   },
                   child: const Text('ОК')),
             ],
@@ -78,22 +72,35 @@ class _EditIconState extends State<EditIcon> {
         });
   }
 
+  void playTimerFromIconEditPressedOk(DateTime now, BuildContext context) {
+    if (newPickedTime != null || newPickedDate != null) {
+      newPickedDate ??= now;
+      newPickedTime ?? TimeOfDay.fromDateTime(now);
+      newPickedDateAndTime = DateTime(newPickedDate!.year, newPickedDate!.month,
+          newPickedDate!.day, newPickedTime!.hour, newPickedTime!.minute);
+
+      context.read<TimerBloc>().add(TimerGetNewTimes(
+            newDatetime: newPickedDateAndTime,
+            stopTime: context.read<TimerBloc>().state.babyWakeUpTime,
+            now: now,
+          ));
+    }
+  }
+
   Future<DateTime?> _showDatePicker(TimerBloc timerBloc) async {
-    return await showDatePicker(
+    return showDatePicker(
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(2050),
-      initialDate: timerBloc.unredactedStartTime ?? DateTime.now(),
-    );
+      initialDate: timerBloc.state.babySleepTime,
+    ).then((value) {
+      newPickedDate = value;
+      return value;
+    });
   }
 
   Future<TimeOfDay?> _showTimePicker(TimerBloc timerBloc) async {
-    TimeOfDay initialTime;
-    if (timerBloc.unredactedStartTime != null) {
-      initialTime = TimeOfDay.fromDateTime(timerBloc.unredactedStartTime!);
-    } else {
-      initialTime = TimeOfDay.fromDateTime(DateTime.now());
-    }
+    final initialTime = TimeOfDay.fromDateTime(timerBloc.state.babySleepTime);
 
     return showTimePicker(
       context: context,
@@ -104,6 +111,9 @@ class _EditIconState extends State<EditIcon> {
           child: child ?? Container(),
         );
       },
-    );
+    ).then((value) {
+      newPickedTime = value;
+      return value;
+    });
   }
 }

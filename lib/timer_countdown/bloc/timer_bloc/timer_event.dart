@@ -56,3 +56,9 @@ class TimerEdit extends TimerEvent {
   const TimerEdit(
       {required this.editStartTime, required this.durationAfterStart});
 }
+
+class UpdateDefautlState extends TimerEvent {
+  final DateTime stopTime;
+
+  const UpdateDefautlState({required this.stopTime});
+}

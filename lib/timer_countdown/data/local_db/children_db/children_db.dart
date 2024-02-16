@@ -144,6 +144,8 @@ class ChildrenDatabase extends _$ChildrenDatabase {
           name: 'Errors on get children from childrenDatabase');
     }
 
+    
+
     final result = <ChildModel>[];
     for (final child in children) {
       result.add(ChildModel.fromLocal(child as ChildrenData));

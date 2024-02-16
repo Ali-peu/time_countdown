@@ -52,14 +52,14 @@ class _TimerPageState extends State<TimerPage> {
                     const Text('Малыш не спит'),
                   if (state.timerStatus == TimerStatus.play)
                     Text(
-                        'Малыш уснул ${Validator().formatTheDateTime(context.read<TimerBloc>().unredactedStartTime!)}'),
+                        'Малыш уснул ${Validator().formatTheDateTime(context.read<TimerBloc>().state.babySleepTime)}'),
                   if (state.timerStatus == TimerStatus.stop)
                     Column(
                       children: [
                         Text(
-                            'Малыш уснул ${Validator().formatTheDateTime(context.read<TimerBloc>().unredactedStartTime!)}'),
+                            'Малыш уснул ${Validator().formatTheDateTime(context.read<TimerBloc>().state.babySleepTime)}'),
                         Text(
-                            'Малыш проснулся : ${Validator().formatTheDateTime(context.read<TimerBloc>().unredactedStopTime!)} ')
+                            'Малыш проснулся : ${Validator().formatTheDateTime(context.read<TimerBloc>().state.babyWakeUpTime)} ')
                       ],
                     ),
                   BlocProvider.value(
@@ -73,7 +73,7 @@ class _TimerPageState extends State<TimerPage> {
                   if (state.timerStatus == TimerStatus.play)
                     BlocProvider.value(
                       value: context.read<TimerBloc>(),
-                      child: const ButtonToEditTimer(),
+                      child: const StopButton(),
                     ),
                   IconButton(
                       onPressed: () {
