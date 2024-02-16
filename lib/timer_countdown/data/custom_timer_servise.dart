@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 
+enum TimerServiseStatus { start, stop }
+
 class TimerService {
   final _timerController = StreamController<Duration>();
   DateTime? _startTime;
@@ -27,18 +29,16 @@ class TimerService {
     });
   }
 
-  Future<void> updateStartTime(
-      DateTime newStartTime, DateTime stopTime, String startOrStop) async {
+  Future<void> updateStartTime(DateTime newStartTime, DateTime stopTime,
+      TimerServiseStatus startOrStop) async {
     if (newStartTime.isBefore(DateTime.now())) {
       if (_startTime != null) {
         isStart = true;
 
-        if (startOrStop == 'Start') {
+        if (startOrStop == TimerServiseStatus.start) {
           final elapsedTime = _startTime!.difference(stopTime);
-
           _startTime = newStartTime.add(elapsedTime);
         } else {
-          log('Stop situation from TimerServise');
           final difference = stopTime.difference(newStartTime);
           _startTime = DateTime.now().subtract(difference);
           isStart = false;

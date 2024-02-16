@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
 import 'package:time_countdown/timer_countdown/domain/validator.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart' as form;
 
 enum AlertPageStatus { first, second }
 
@@ -17,8 +19,8 @@ class StatefulDialog extends StatefulWidget {
 }
 
 class _StatefulDialogState extends State<StatefulDialog> {
-  DateTime? newPickedDate;
-  TimeOfDay? newPickedTime;
+  DateTime? _newPickedDate;
+  TimeOfDay? _newPickedTime;
 
   bool isUserEditTime = false;
   bool isUserEditDate = false;
@@ -59,7 +61,7 @@ class _StatefulDialogState extends State<StatefulDialog> {
                 if (alertPageStatus == AlertPageStatus.second)
                   TextButton(
                       onPressed: () async {
-                        newPickedDate =
+                        _newPickedDate =
                             await _showDatePicker(context.read<TimerBloc>());
                       },
                       child: Text(startOrStop == ChangeBabyTime.sleep
@@ -72,7 +74,7 @@ class _StatefulDialogState extends State<StatefulDialog> {
                 if (alertPageStatus == AlertPageStatus.second)
                   TextButton(
                       onPressed: () async {
-                        newPickedTime =
+                        _newPickedTime =
                             await _showTimePicker(context.read<TimerBloc>());
                       },
                       child: Text(startOrStop == ChangeBabyTime.sleep
@@ -110,11 +112,15 @@ class _StatefulDialogState extends State<StatefulDialog> {
   void updatedChildSleepAndAwekenTimeLogic(BuildContext context) {
     final now = DateTime.now();
     log('${now.hour}:${now.minute}');
-    if (newPickedTime != null || newPickedDate != null) {
-      newPickedDate ??= now;
-      newPickedTime ??= TimeOfDay.fromDateTime(now);
-      newPickedDateAndTime = DateTime(newPickedDate!.year, newPickedDate!.month,
-          newPickedDate!.day, newPickedTime!.hour, newPickedTime!.minute);
+    if (_newPickedTime != null || _newPickedDate != null) {
+      _newPickedDate ??= now;
+      _newPickedTime ??= TimeOfDay.fromDateTime(now);
+      newPickedDateAndTime = DateTime(
+          _newPickedDate!.year,
+          _newPickedDate!.month,
+          _newPickedDate!.day,
+          _newPickedTime!.hour,
+          _newPickedTime!.minute);
 
       if (startOrStop == ChangeBabyTime.aweken) {
         log('Когда меняю время пробуждение малыша');
@@ -141,11 +147,25 @@ class _StatefulDialogState extends State<StatefulDialog> {
 
   Future<DateTime?> _showDatePicker(TimerBloc timerBloc) async {
     return showDatePicker(
-      context: context,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2050),
-      initialDate: timerBloc.state.babySleepTime,
-    ).then((value) {
+        context: context,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2050),
+        initialDate: timerBloc.state.babySleepTime,
+        builder: (context, child) {
+          return FormBuilderDateTimePicker(
+            name: 'DatePicker Custom',
+            decoration: const InputDecoration(
+                labelText: 'DatePicker Custom Label',
+                labelStyle: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal)),
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.normal),
+          );
+        }).then((value) {
       log('Its happen if i close the datePicker and its Value: $value');
       if (value != null) {
         isUserEditDate = true;

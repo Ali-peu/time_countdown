@@ -45,6 +45,7 @@ dependencies:
   path: ^1.8.3
   surf_lint_rules: ^3.0.0
   sqlite3: ^2.4.0
+  flutter_form_builder: ^9.2.1
 
 
 

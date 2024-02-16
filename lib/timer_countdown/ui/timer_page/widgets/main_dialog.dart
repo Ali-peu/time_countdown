@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
@@ -5,7 +7,8 @@ import 'package:time_countdown/timer_countdown/domain/validator.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/stateful_dialog.dart';
 
 class MainDialog extends StatefulWidget {
-  const MainDialog({super.key});
+  final TimerBloc timerBloc;
+  const MainDialog({required this.timerBloc,super.key});
 
   @override
   State<MainDialog> createState() => _MainDialogState();
@@ -30,12 +33,12 @@ class _MainDialogState extends State<MainDialog> {
                 children: [
                   TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
                         context.read<TimerBloc>().add(TimerStop(
                             dateTime:
                                 context.read<TimerBloc>().state.babyWakeUpTime,
                             babyID:
                                 context.read<TimerBloc>().state.choosenBabyId));
+                        Navigator.of(context).pop();
                       },
                       child: const Text('Сохранить')),
                   TextButton(

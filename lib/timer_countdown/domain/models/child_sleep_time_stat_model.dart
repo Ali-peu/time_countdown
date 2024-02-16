@@ -1,7 +1,6 @@
-
 import 'package:drift/drift.dart';
 import 'package:equatable/equatable.dart';
-import 'package:time_countdown/timer_countdown/data/local_db/children_db/children_db.dart';
+import 'package:time_countdown/timer_countdown/data/local_db/children_db.dart';
 
 class ChildSleepTimeStatModel extends Equatable {
   final DateTime babySleepDateTime;
@@ -21,7 +20,7 @@ class ChildSleepTimeStatModel extends Equatable {
         babyId = data.babyId,
         duration = Duration(seconds: data.duration);
 
-  ChildSleepTimeStatCompanion childModeloChildrenCompanion() {
+  ChildSleepTimeStatCompanion childModelToChildrenCompanion() {
     final sleepDateTime = Value<DateTime>(babySleepDateTime);
     final wakeUpDateTime = Value<DateTime>(babyWakeUpDateTime);
     final durationInInt = Value<int>(duration.inSeconds);

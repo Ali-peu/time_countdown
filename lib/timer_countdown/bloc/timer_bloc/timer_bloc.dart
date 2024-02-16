@@ -2,8 +2,7 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
-import 'package:time_countdown/timer_countdown/data/custom_timer.dart';
+import 'package:time_countdown/timer_countdown/data/custom_timer_servise.dart';
 import 'package:time_countdown/timer_countdown/domain/models/child_model.dart';
 import 'package:time_countdown/timer_countdown/domain/models/child_sleep_time_stat_model.dart';
 import 'package:time_countdown/timer_countdown/domain/repository/child_sleep_time_stat_repository.dart';
@@ -13,129 +12,94 @@ part 'timer_event.dart';
 part 'timer_state.dart';
 
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
-  // DateTime? _unredactedStartTime;
-  // DateTime? get unredactedStartTime => _unredactedStartTime;
-
-  // void setUnredactedStartTime(DateTime dateTime) {
-  //   _unredactedStartTime = dateTime;
-  // }
-
-  // DateTime? _unredactedStopTime;
-  // DateTime? get unredactedStopTime => _unredactedStopTime;
-  // void setUnredactedStopTime(DateTime value) {
-  //   _unredactedStopTime = value;
-  // }
-
   TimerService timerService = TimerService();
 
-  ChildrenRepository childrenRepository;
-  ChildSleepTimeStatRepository childSleepTimeStatRepository;
+  final ChildrenRepository _childrenRepository;
+  final ChildSleepTimeStatRepository _childSleepTimeStatRepository;
 
   TimerBloc(
-      {required this.childrenRepository,
-      required this.childSleepTimeStatRepository})
-      : super(TimerState(
-            babySleepTime: DateTime.now(),
-            babyWakeUpTime: DateTime.now(),
-            now: DateTime.now(),
-            choosenBabyId: 0)) {
-    on<FetchedChildrens>((event, emit) async {
-      await _onFetchedChildrens(emit);
-    });
-    on<FetchedListChildSleepTimeStats>((event, emit) async {
-      var childSleepTimeStats = <ChildSleepTimeStatModel>[];
-      childSleepTimeStats =
-          await childSleepTimeStatRepository.getchildSleepTimeStats();
+      {required ChildrenRepository childrenRepository,
+      required ChildSleepTimeStatRepository childSleepTimeStatRepository})
+      : _childSleepTimeStatRepository = childSleepTimeStatRepository,
+        _childrenRepository = childrenRepository,
+        super(TimerState(
+          babySleepTime: DateTime.now(),
+          babyWakeUpTime: DateTime.now(),
+          now: DateTime.now(),
+        )) {
+    on<FetchedChildrens>((event, emit) => _onFetchedChildrens(emit));
 
-      emit(TimerState(
-          now: DateTime.now(),
-          timerPageStatus: state.timerPageStatus,
-          timerStatus: state.timerStatus,
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: state.babyWakeUpTime,
-          listChildSleepTimeStats: childSleepTimeStats,
-          listChildren: state.listChildren,
-          choosenBabyId: state.choosenBabyId));
-    });
+    on<FetchedListChildSleepTimeStats>(
+        (event, emit) => _onFetchedListChildSleepTimeStats(emit));
 
-    on<UpdateDefautlState>((event, emit) {
-      emit(TimerState(
-          now: DateTime.now(),
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: event.stopTime,
-          timerStatus: state.timerStatus,
-          listChildren: state.listChildren,
-          listChildSleepTimeStats: state.listChildSleepTimeStats,
-          timerPageStatus: state.timerPageStatus,
-          choosenBabyId: state.choosenBabyId));
-    });
-    on<GetPickedChildId>((event, emit) {
-      emit(TimerState(
-          now: DateTime.now(),
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: state.babyWakeUpTime,
-          timerStatus: state.timerStatus,
-          listChildren: state.listChildren,
-          listChildSleepTimeStats: state.listChildSleepTimeStats,
-          timerPageStatus: state.timerPageStatus,
-          choosenBabyId: event.pickedBabyId));
-    });
+    on<UpdateDefautlState>((event, emit) => _onUpdateDefautlState(emit, event));
+
+    on<GetPickedChildId>((event, emit) => _onGetPickedChildId(emit, event));
+
     on<TimerStart>(_onTimerPlay);
+
     on<TimerStop>(_onTimerStop);
 
     on<TimerGetNewTimes>(_timerGetNewTimesOrRedected);
+
     on<TimerError>((event, emit) => timerError(emit));
 
     on<TimerGetNewDateTimeForEnd>(_timerGetNewDateTimeForEnd);
   }
 
+  Future<void> _onGetPickedChildId(
+      Emitter<TimerState> emit, GetPickedChildId event) async {
+    emit(
+        state.copyWith(choosenBabyId: event.pickedBabyId, now: DateTime.now()));
+  }
+
+  Future<void> _onUpdateDefautlState(
+      Emitter<TimerState> emit, UpdateDefautlState event) async {
+    emit(state.copyWith(
+      babyWakeUpTime: event.stopTime,
+      now: DateTime.now(),
+    ));
+  }
+
+  Future<void> _onFetchedListChildSleepTimeStats(
+      Emitter<TimerState> emit) async {
+    var childSleepTimeStats = <ChildSleepTimeStatModel>[];
+    childSleepTimeStats =
+        await _childSleepTimeStatRepository.getchildSleepTimeStats();
+    log(state.listChildren.toString(),
+        name: '_onFetchedListChildSleepTimeStats: ');
+
+    emit(state.copyWith(
+      listChildSleepTimeStats: childSleepTimeStats,
+      now: DateTime.now(),
+    ));
+  }
+
   Future<void> _onFetchedChildrens(Emitter<TimerState> emit) async {
     var childrens = <ChildModel>[];
-    childrens = await childrenRepository.testGetAllChild();
-
-    if (childrens.isEmpty) {
-      emit(TimerState(
-          now: DateTime.now(),
-          timerPageStatus: TimerPageStatus.failure,
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: state.babyWakeUpTime,
-          choosenBabyId: 0));
-    } else {
-      emit(TimerState(
-          now: DateTime.now(),
-          listChildren: childrens,
-          timerPageStatus: TimerPageStatus.success,
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: state.babyWakeUpTime,
-          choosenBabyId: childrens.first.childId));
-    }
-
-    log('Log after emitts');
+    childrens = await _childrenRepository.testGetAllChild();
+    emit(state.copyWith(
+        now: DateTime.now(),
+        listChildren: childrens,
+        timerPageStatus: TimerPageStatus.success,
+        choosenBabyId: childrens.first.childId));
   }
 
   Future<void> _timerGetNewDateTimeForEnd(
       TimerGetNewDateTimeForEnd event, Emitter<TimerState> emit) async {
     if (event.stopTime.isBefore(state.babySleepTime) ||
         event.stopTime.isAfter(event.now)) {
-      log('Do timer Error in event TimerGetNewDateTimeForEnd');
       add(TimerError());
     } else {
-      log(event.newDatetime.toString(),
-          name: 'event.stopTime.toString() from EVENT');
-      log(event.stopTime.toString(),
-          name: 'event.stopTime.toString() from EVENT');
       await timerService.updateStartTime(
-          event.newDatetime, event.stopTime, 'Stop');
-      emit(TimerState(
-          now: DateTime.now(),
-          timerPageStatus: state.timerPageStatus,
-          babySleepTime: state.babySleepTime,
-          babyWakeUpTime: event.stopTime,
-          timerStatus: state.timerStatus,
-          listChildSleepTimeStats: state.listChildSleepTimeStats,
-          listChildren: state.listChildren,
-          choosenBabyId: state.choosenBabyId));
-      add(TimerStart(startDateTime: state.babySleepTime));
+          event.newDatetime, event.stopTime, TimerServiseStatus.stop);
+      emit(state.copyWith(
+        now: DateTime.now(),
+        babyWakeUpTime: event.stopTime,
+      ));
+      add(TimerStart(
+        startDateTime: event.newDatetime,
+      ));
     }
   }
 
@@ -147,18 +111,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       if (event.newDatetime.isBefore(event.now) &&
           event.newDatetime.isBefore(event.stopTime)) {
         await timerService.updateStartTime(
-            event.newDatetime, event.stopTime, 'Start');
-        emit(TimerState(
-            now: DateTime.now(),
-            timerPageStatus: state.timerPageStatus,
-            babySleepTime: event.newDatetime,
-            babyWakeUpTime: state.babyWakeUpTime,
-            timerStatus: state.timerStatus,
-            listChildSleepTimeStats: state.listChildSleepTimeStats,
-            listChildren: state.listChildren,
-            choosenBabyId: state.choosenBabyId));
+            event.newDatetime, event.stopTime, TimerServiseStatus.start);
+        emit(state.copyWith(
+          babySleepTime: event.newDatetime,
+          now: DateTime.now(),
+        ));
 
-        add(TimerStart(startDateTime: state.babySleepTime));
+        add(TimerStart(
+            startDateTime:
+                event.newDatetime)); // WAS HERE state.babSleepDateTime
       } else {
         add(TimerError());
       }
@@ -166,61 +127,36 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   Future<void> timerError(Emitter<TimerState> emit) async {
-    emit(TimerState(
-        now: DateTime.now(),
-        timerPageStatus: state.timerPageStatus,
-        babySleepTime: state.babySleepTime,
-        babyWakeUpTime: state.babyWakeUpTime,
-        timerStatus: state.timerStatus,
-        listChildSleepTimeStats: state.listChildSleepTimeStats,
-        listChildren: state.listChildren,
-        choosenBabyId: state.choosenBabyId));
+    emit(state.copyWith(
+      now: DateTime.now(),
+    ));
   }
 
   Future<void> _onTimerPlay(TimerStart event, Emitter<TimerState> emit) async {
     if (timerService.isClose()) {
       timerService = TimerService();
     }
-    timerService.startTimer(event
-        .startDateTime); // TODO нужен ли emittit конец таймере babyWakeUpTime
-
-    emit(TimerState(
-        now: DateTime.now(),
-        babySleepTime: event.startDateTime,
-        babyWakeUpTime: state.babyWakeUpTime,
-        timerPageStatus: state.timerPageStatus,
-        timerStatus: TimerStatus.play,
-        listChildSleepTimeStats: state.listChildSleepTimeStats,
-        listChildren: state.listChildren,
-        choosenBabyId: state.choosenBabyId));
-    // setUnredactedStartTime(event.startDateTime);
-    // timerService.startTimer(event.startDateTime);
-    // emit(TimerState(
-    //     timerStatus: TimerStatus.play,
-    //     listChildSleepTimeStats: state.listChildSleepTimeStats,
-    //     listChildren: state.listChildren));
+    timerService.startTimer(event.startDateTime);
+    emit(state.copyWith(
+      timerStatus: TimerStatus.play,
+      now: DateTime.now(),
+      babySleepTime: event.startDateTime,
+    ));
   }
 
   Future<void> _onTimerStop(TimerStop event, Emitter<TimerState> emit) async {
-    emit(TimerState(
-      now: DateTime.now(),
-      timerPageStatus: state.timerPageStatus,
-      timerStatus: TimerStatus.stop,
-      listChildSleepTimeStats: state.listChildSleepTimeStats,
-      listChildren: state.listChildren,
-      babySleepTime: state.babySleepTime,
-      babyWakeUpTime: state.babyWakeUpTime,
-      choosenBabyId: state.choosenBabyId, // Проверить точно ли изменилась
-    ));
-
     final babySleepTime = state.babySleepTime;
     final babyWakeUpTime = state.babyWakeUpTime;
     final duration = babyWakeUpTime.difference(babySleepTime);
-    await childSleepTimeStatRepository.createChildAllSleepTimerStats(
+    await _childSleepTimeStatRepository.createChildSleepTimerStat(
         babySleepTime, babyWakeUpTime, duration, event.babyID);
     add(FetchedListChildSleepTimeStats());
 
-    await timerService.stopTimer();
-    await timerService.dispose();
+    // await timerService.stopTimer();
+    // await timerService.dispose();
+    emit(state.copyWith(
+      timerStatus: TimerStatus.stop,
+      now: DateTime.now(),
+    ));
   }
 }

@@ -7,12 +7,12 @@ class CustomAlertDialog extends StatefulWidget {
   const CustomAlertDialog({super.key});
 
   @override
-  State<CustomAlertDialog> createState() => _AlertDialogState();
+  State<CustomAlertDialog> createState() => _CustomAlertDialogState();
 }
 
-class _AlertDialogState extends State<CustomAlertDialog> {
-  DateTime? newPickedDate;
-  TimeOfDay? newPickedTime;
+class _CustomAlertDialogState extends State<CustomAlertDialog> {
+  DateTime? _newPickedDate;
+  TimeOfDay? _newPickedTime;
 
   late DateTime newPickedDateAndTime;
   @override
@@ -24,19 +24,19 @@ class _AlertDialogState extends State<CustomAlertDialog> {
         children: [
           TextButton(
               onPressed: () async {
-                newPickedDate =
+                _newPickedDate =
                     await _showDatePicker(context.read<TimerBloc>());
                 setState(() {});
               },
-              child: Text(Validator().creatingDataDay(newPickedDate ?? now))),
+              child: Text(Validator().creatingDataDay(_newPickedDate ?? now))),
           TextButton(
               onPressed: () async {
-                newPickedTime =
+                _newPickedTime =
                     await _showTimePicker(context.read<TimerBloc>());
                 setState(() {});
               },
-              child: Text(Validator().formatTheTimeOfDay(newPickedTime ??
-                  TimeOfDay.fromDateTime(newPickedDate ?? now))))
+              child: Text(Validator().formatTheTimeOfDay(_newPickedTime ??
+                  TimeOfDay.fromDateTime(_newPickedDate ?? now))))
         ],
       ),
       actions: [
@@ -52,18 +52,16 @@ class _AlertDialogState extends State<CustomAlertDialog> {
   }
 
   void playTimerFromIconEditPressedOk(DateTime now, BuildContext context) {
-    if (newPickedTime != null || newPickedDate != null) {
-      newPickedDate ??= now;
-      newPickedTime ?? TimeOfDay.fromDateTime(now);
-      newPickedDateAndTime = DateTime(newPickedDate!.year, newPickedDate!.month,
-          newPickedDate!.day, newPickedTime!.hour, newPickedTime!.minute);
+    _newPickedDate ??= now;
+    _newPickedTime ??= TimeOfDay.fromDateTime(now);
+    newPickedDateAndTime = DateTime(_newPickedDate!.year, _newPickedDate!.month,
+        _newPickedDate!.day, _newPickedTime!.hour, _newPickedTime!.minute);
 
-      context.read<TimerBloc>().add(TimerGetNewTimes(
-            newDatetime: newPickedDateAndTime,
-            stopTime: context.read<TimerBloc>().state.babyWakeUpTime,
-            now: now,
-          ));
-    }
+    context.read<TimerBloc>().add(TimerGetNewTimes(
+          newDatetime: newPickedDateAndTime,
+          stopTime: context.read<TimerBloc>().state.babyWakeUpTime,
+          now: now,
+        ));
   }
 
   Future<DateTime?> _showDatePicker(TimerBloc timerBloc) async {
@@ -73,7 +71,7 @@ class _AlertDialogState extends State<CustomAlertDialog> {
       lastDate: DateTime(2050),
       initialDate: timerBloc.state.babySleepTime,
     ).then((value) {
-      newPickedDate = value;
+      _newPickedDate = value;
       return value;
     });
   }
@@ -91,7 +89,7 @@ class _AlertDialogState extends State<CustomAlertDialog> {
         );
       },
     ).then((value) {
-      newPickedTime = value;
+      _newPickedTime = value;
       return value;
     });
   }

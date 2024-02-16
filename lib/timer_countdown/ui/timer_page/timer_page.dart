@@ -4,11 +4,11 @@ import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
 import 'package:time_countdown/timer_countdown/domain/models/child_model.dart';
 import 'package:time_countdown/timer_countdown/domain/repository/children_repository.dart';
 import 'package:time_countdown/timer_countdown/domain/validator.dart';
-import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/buttons/button_to_edit_timer.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/buttons/children_dropdown.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/buttons/play_button.dart';
-import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/state_texts/second_timer.dart';
+import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/buttons/stop_button.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/state_texts/stats_listview.dart';
+import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/state_texts/timer.dart';
 
 class TimerPage extends StatefulWidget {
   const TimerPage({super.key});
@@ -27,25 +27,16 @@ class _TimerPageState extends State<TimerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<TimerBloc, TimerState>(
-        listener: (context, state) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.timerStatus.toString())));
-        },
-        child: BlocBuilder<TimerBloc, TimerState>(
-          builder: (context, state) {
-            return Center(
+      body: BlocBuilder<TimerBloc, TimerState>(
+        builder: (context, state) {
+          return Center(
+            child: BlocProvider.value(
+              value: context.read<TimerBloc>(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  BlocProvider.value(
-                    value: context.read<TimerBloc>(),
-                    child: const StatsListview(),
-                  ),
-                  BlocProvider.value(
-                    value: context.read<TimerBloc>(),
-                    child: const ChildrenDropdown(),
-                  ),
+                  const StatsListview(),
+                  const ChildrenDropdown(),
                   Text(
                       'Системное время: ${Validator().formatTheDateTime(DateTime.now())}'),
                   if (state.timerStatus == TimerStatus.initial)
@@ -62,19 +53,9 @@ class _TimerPageState extends State<TimerPage> {
                             'Малыш проснулся : ${Validator().formatTheDateTime(context.read<TimerBloc>().state.babyWakeUpTime)} ')
                       ],
                     ),
-                  BlocProvider.value(
-                      value: context.read<TimerBloc>(),
-                      child: const SecondTimer()),
-                  if (state.timerStatus != TimerStatus.play)
-                    BlocProvider.value(
-                      value: context.read<TimerBloc>(),
-                      child: const PlayButton(),
-                    ),
-                  if (state.timerStatus == TimerStatus.play)
-                    BlocProvider.value(
-                      value: context.read<TimerBloc>(),
-                      child: const StopButton(),
-                    ),
+                  Timer(timerBloc: context.read<TimerBloc>()),
+                  if (state.timerStatus != TimerStatus.play) const PlayButton(),
+                  if (state.timerStatus == TimerStatus.play) const StopButton(),
                   IconButton(
                       onPressed: () {
                         ChildrenRepository().testCreateChild();
@@ -82,15 +63,10 @@ class _TimerPageState extends State<TimerPage> {
                       icon: const Icon(Icons.add))
                 ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
-  }
-
-  BlocProvider<TimerBloc> timerInState() {
-    return BlocProvider.value(
-        value: context.read<TimerBloc>(), child: const SecondTimer());
   }
 }

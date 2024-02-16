@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
@@ -43,6 +45,9 @@ class _ChildrenDropdownState extends State<ChildrenDropdown> {
                         setState(() {});
                       });
                 } else {
+                  log(snapshot.data.toString(),
+                      name: 'snapshot has data, but its empty');
+
                   return const Text('snapshot has data, but its empty');
                 }
               } else {

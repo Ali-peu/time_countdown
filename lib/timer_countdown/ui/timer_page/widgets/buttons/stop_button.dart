@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:time_countdown/timer_countdown/bloc/timer_bloc/timer_bloc.dart';
+import 'package:time_countdown/timer_countdown/domain/validator.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/buttons/edit_icon.dart';
 import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/main_dialog.dart';
 
@@ -31,18 +32,18 @@ class _StopButtonState extends State<StopButton> {
   }
 
   Future<dynamic> showDialogIfWasPressedCancel() async {
-    final timerBloc = context.read<TimerBloc>();
-
+    if (Validator().dateTimeAsSameTimeWithNow(
+        firstTime: context.read<TimerBloc>().state.babyWakeUpTime,
+        now: DateTime.now())) {
+      log('Valiidator dateTimeAsSameTimeWithNow is true');
+      context
+          .read<TimerBloc>()
+          .add(UpdateDefautlState(stopTime: DateTime.now()));
+    }
     await showDialog(
-            context: context,
-            builder: (_) =>
-                BlocProvider.value(value: timerBloc, child: const MainDialog()))
-        .then((value) {
-      if (value == null) {
-        log(value.runtimeType.toString(), name: 'Value type');
-        log('When show dialog then == null');
-        log('это выполняеться в любом варианте закрытие диалога');
-      }
-    });
+        context: context,
+        builder: (_) => BlocProvider.value(
+            value: context.read<TimerBloc>(),
+            child: MainDialog(timerBloc: context.read<TimerBloc>())));
   }
 }

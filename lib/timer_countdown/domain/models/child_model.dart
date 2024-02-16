@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:equatable/equatable.dart';
 
-import 'package:time_countdown/timer_countdown/data/local_db/children_db/children_db.dart';
+import 'package:time_countdown/timer_countdown/data/local_db/children_db.dart';
 
 DateTime now = DateTime.now();
 
@@ -26,7 +26,7 @@ class ChildModel extends Equatable {
         gender = data.gender,
         childId = data.id;
 
-  ChildrenCompanion childModeloChildrenCompanion() {
+  ChildrenCompanion childModelToChildrenCompanion() {
     final nameChildrenCompanion = Value<String>(name);
     final birthDay = Value<DateTime>(childBirthday);
     final babyGender = Value<bool>(gender);
