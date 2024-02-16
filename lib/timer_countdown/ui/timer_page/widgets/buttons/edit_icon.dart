@@ -11,8 +11,6 @@ class EditIcon extends StatefulWidget {
 }
 
 class _EditIconState extends State<EditIcon> {
-  // TODO Надо обнавить значение
-
   @override
   Widget build(BuildContext context) {
     final timerBloc = context.read<TimerBloc>();
