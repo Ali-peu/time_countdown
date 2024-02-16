@@ -39,7 +39,7 @@ class TimerService {
           _startTime = newStartTime.add(elapsedTime);
         } else {
           log('Stop situation from TimerServise');
-          Duration difference = stopTime.difference(newStartTime);
+          final difference = stopTime.difference(newStartTime);
           _startTime = DateTime.now().subtract(difference);
           isStart = false;
         }

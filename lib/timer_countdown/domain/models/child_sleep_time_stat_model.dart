@@ -2,7 +2,6 @@
 import 'package:drift/drift.dart';
 import 'package:equatable/equatable.dart';
 import 'package:time_countdown/timer_countdown/data/local_db/children_db/children_db.dart';
-import 'package:time_countdown/timer_countdown/data/local_db/children_sleeps_db/child_sleep_time_stat.dart';
 
 class ChildSleepTimeStatModel extends Equatable {
   final DateTime babySleepDateTime;

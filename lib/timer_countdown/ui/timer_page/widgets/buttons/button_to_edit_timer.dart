@@ -31,21 +31,7 @@ class _StopButtonState extends State<StopButton> {
   }
 
   Future<dynamic> showDialogIfWasPressedCancel() async {
-    // final now = context.read<TimerBloc>().state.now;
-
     final timerBloc = context.read<TimerBloc>();
-
-    // Тут в babyWakeUpTime со TimerState дефолтное значение Datetime.now() кажется не нужен TODO но debug тест покажет
-    // if (Validator().dateTimeAsSameTimeWithNow(
-    //     firstTime: context.read<TimerBloc>().state.babyWakeUpTime, now: now)) { // Для чего вот этот if
-    //     // Так при проигрывание таймера изначально нынешнее время передается вот внутри если
-    //   log('Validator true');
-    //   context
-    //       .read<TimerBloc>()
-    //       .add(UpdateDefautlState(stopTime: DateTime.now()));
-    // } else {
-    //   log('Validator false');
-    // }
 
     await showDialog(
             context: context,

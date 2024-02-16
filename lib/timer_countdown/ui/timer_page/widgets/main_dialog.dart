@@ -34,11 +34,8 @@ class _MainDialogState extends State<MainDialog> {
                         context.read<TimerBloc>().add(TimerStop(
                             dateTime:
                                 context.read<TimerBloc>().state.babyWakeUpTime,
-                            babyID: context
-                                .read<TimerBloc>()
-                                .state
-                                .choosenBabyId)); // TODO Проверить что бы этот переменная сохранилась Это должно вернутся со элементом детей
-                        // Также id выбранного ребенка надо в state положить
+                            babyID:
+                                context.read<TimerBloc>().state.choosenBabyId));
                       },
                       child: const Text('Сохранить')),
                   TextButton(
