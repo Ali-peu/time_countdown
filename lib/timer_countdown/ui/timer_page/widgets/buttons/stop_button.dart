@@ -17,18 +17,18 @@ class StopButton extends StatefulWidget {
 class _StopButtonState extends State<StopButton> {
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-        onPressed: showDialogIfWasPressedCancel,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Завершить сон'),
-            BlocProvider.value(
-              value: context.read<TimerBloc>(),
-              child: const EditIcon(),
-            )
-          ],
-        ));
+    return BlocProvider.value(
+      value: context.read<TimerBloc>(),
+      child: TextButton(
+          onPressed: showDialogIfWasPressedCancel,
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Завершить сон'),
+              EditIcon(),
+            ],
+          )),
+    );
   }
 
   Future<dynamic> showDialogIfWasPressedCancel() async {

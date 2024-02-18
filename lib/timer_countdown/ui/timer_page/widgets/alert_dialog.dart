@@ -70,10 +70,7 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2050),
       initialDate: timerBloc.state.babySleepTime,
-    ).then((value) {
-      _newPickedDate = value;
-      return value;
-    });
+    );
   }
 
   Future<TimeOfDay?> _showTimePicker(TimerBloc timerBloc) async {
@@ -88,9 +85,6 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
           child: child ?? Container(),
         );
       },
-    ).then((value) {
-      _newPickedTime = value;
-      return value;
-    });
+    );
   }
 }

@@ -8,7 +8,7 @@ import 'package:time_countdown/timer_countdown/ui/timer_page/widgets/stateful_di
 
 class MainDialog extends StatefulWidget {
   final TimerBloc timerBloc;
-  const MainDialog({required this.timerBloc,super.key});
+  const MainDialog({required this.timerBloc, super.key});
 
   @override
   State<MainDialog> createState() => _MainDialogState();
@@ -32,13 +32,13 @@ class _MainDialogState extends State<MainDialog> {
               Row(
                 children: [
                   TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         context.read<TimerBloc>().add(TimerStop(
                             dateTime:
                                 context.read<TimerBloc>().state.babyWakeUpTime,
                             babyID:
                                 context.read<TimerBloc>().state.choosenBabyId));
-                        Navigator.of(context).pop();
+                        Navigator.pop(context);
                       },
                       child: const Text('Сохранить')),
                   TextButton(

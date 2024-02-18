@@ -53,7 +53,7 @@ class _TimerPageState extends State<TimerPage> {
                             'Малыш проснулся : ${Validator().formatTheDateTime(context.read<TimerBloc>().state.babyWakeUpTime)} ')
                       ],
                     ),
-                  Timer(timerBloc: context.read<TimerBloc>()),
+                  const DisplayTimer(),
                   if (state.timerStatus != TimerStatus.play) const PlayButton(),
                   if (state.timerStatus == TimerStatus.play) const StopButton(),
                   IconButton(

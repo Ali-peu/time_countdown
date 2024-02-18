@@ -11,7 +11,7 @@ class TimerService {
 
   Stream<Duration> get timerStream => _timerController.stream;
 
-  void startTimer(DateTime startTime) {
+  Future<void> startTimer(DateTime startTime) async {
     if (isStart) {
       log('isStart true');
       _startTime = startTime;
@@ -62,6 +62,7 @@ class TimerService {
   }
 
   Future<void> dispose() async {
+    await stopTimer();
     await _timerController.close();
   }
 }

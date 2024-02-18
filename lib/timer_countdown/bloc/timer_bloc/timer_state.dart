@@ -6,7 +6,7 @@ enum TimerPageStatus { initial, success, failure, loading }
 
 class TimerState extends Equatable {
   const TimerState(
-      {required this.now,
+      {
       required this.babySleepTime,
       required this.babyWakeUpTime,
       this.choosenBabyId = 0, // TODO В базе нет ребенка с id == 0
@@ -23,7 +23,7 @@ class TimerState extends Equatable {
   final List<ChildSleepTimeStatModel> listChildSleepTimeStats;
   final DateTime babySleepTime;
   final DateTime babyWakeUpTime;
-  final DateTime now;
+
   final int choosenBabyId;
 
   TimerState copyWith({
@@ -33,7 +33,7 @@ class TimerState extends Equatable {
     List<ChildSleepTimeStatModel>? listChildSleepTimeStats,
     DateTime? babySleepTime,
     DateTime? babyWakeUpTime,
-    DateTime? now,
+
     int? choosenBabyId,
   }) {
     return TimerState(
@@ -42,7 +42,7 @@ class TimerState extends Equatable {
         timerPageStatus: timerPageStatus ?? this.timerPageStatus,
         listChildSleepTimeStats:
             listChildSleepTimeStats ?? this.listChildSleepTimeStats,
-        now: now ?? this.now,
+      
         babySleepTime: babySleepTime ?? this.babySleepTime,
         babyWakeUpTime: babyWakeUpTime ?? this.babyWakeUpTime,
         choosenBabyId: choosenBabyId ?? this.choosenBabyId);
@@ -56,7 +56,7 @@ class TimerState extends Equatable {
         listChildren,
         timerPageStatus,
         listChildSleepTimeStats,
-        now,
+        
         choosenBabyId
       ];
 }

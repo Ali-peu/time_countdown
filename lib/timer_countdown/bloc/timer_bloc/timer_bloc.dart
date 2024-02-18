@@ -25,7 +25,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         super(TimerState(
           babySleepTime: DateTime.now(),
           babyWakeUpTime: DateTime.now(),
-          now: DateTime.now(),
         )) {
     on<FetchedChildrens>((event, emit) => _onFetchedChildrens(emit));
 
@@ -49,15 +48,13 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   Future<void> _onGetPickedChildId(
       Emitter<TimerState> emit, GetPickedChildId event) async {
-    emit(
-        state.copyWith(choosenBabyId: event.pickedBabyId, now: DateTime.now()));
+    emit(state.copyWith(choosenBabyId: event.pickedBabyId));
   }
 
   Future<void> _onUpdateDefautlState(
       Emitter<TimerState> emit, UpdateDefautlState event) async {
     emit(state.copyWith(
       babyWakeUpTime: event.stopTime,
-      now: DateTime.now(),
     ));
   }
 
@@ -71,7 +68,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
     emit(state.copyWith(
       listChildSleepTimeStats: childSleepTimeStats,
-      now: DateTime.now(),
     ));
   }
 
@@ -79,7 +75,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     var childrens = <ChildModel>[];
     childrens = await _childrenRepository.testGetAllChild();
     emit(state.copyWith(
-        now: DateTime.now(),
         listChildren: childrens,
         timerPageStatus: TimerPageStatus.success,
         choosenBabyId: childrens.first.childId));
@@ -94,7 +89,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       await timerService.updateStartTime(
           event.newDatetime, event.stopTime, TimerServiseStatus.stop);
       emit(state.copyWith(
-        now: DateTime.now(),
         babyWakeUpTime: event.stopTime,
       ));
       add(TimerStart(
@@ -114,7 +108,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             event.newDatetime, event.stopTime, TimerServiseStatus.start);
         emit(state.copyWith(
           babySleepTime: event.newDatetime,
-          now: DateTime.now(),
         ));
 
         add(TimerStart(
@@ -127,36 +120,38 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   Future<void> timerError(Emitter<TimerState> emit) async {
-    emit(state.copyWith(
-      now: DateTime.now(),
-    ));
+    emit(state.copyWith());
   }
 
   Future<void> _onTimerPlay(TimerStart event, Emitter<TimerState> emit) async {
     if (timerService.isClose()) {
       timerService = TimerService();
     }
-    timerService.startTimer(event.startDateTime);
+    await timerService.startTimer(event.startDateTime);
     emit(state.copyWith(
-      timerStatus: TimerStatus.play,
-      now: DateTime.now(),
-      babySleepTime: event.startDateTime,
-    ));
+        timerStatus: TimerStatus.play,
+        babySleepTime: event.startDateTime,
+        babyWakeUpTime: DateTime.now()));
   }
 
   Future<void> _onTimerStop(TimerStop event, Emitter<TimerState> emit) async {
     final babySleepTime = state.babySleepTime;
     final babyWakeUpTime = state.babyWakeUpTime;
     final duration = babyWakeUpTime.difference(babySleepTime);
+
+// Создание записи в хранилище
     await _childSleepTimeStatRepository.createChildSleepTimerStat(
         babySleepTime, babyWakeUpTime, duration, event.babyID);
-    add(FetchedListChildSleepTimeStats());
 
-    // await timerService.stopTimer();
-    // await timerService.dispose();
+    // Добавление события FetchedListChildSleepTimeStats после завершения таймера
+
+    // Остановка таймера
+    await timerService.stopTimer();
+    await timerService.dispose();
+
+    add(FetchedListChildSleepTimeStats());
     emit(state.copyWith(
       timerStatus: TimerStatus.stop,
-      now: DateTime.now(),
     ));
   }
 }
